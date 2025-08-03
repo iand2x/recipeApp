@@ -16,6 +16,7 @@ import { Recipe } from '../models/Recipe';
 import recipeTypes from '../data/recipetypes.json';
 import { useRecipes, useImagePicker, useRecipeForm } from '../hooks';
 import { UrlInputModal } from '../components/UrlInputModal';
+import { EditableStep } from '../components/EditableStep';
 
 const AddRecipeScreen = () => {
   const navigation = useNavigation();
@@ -36,7 +37,10 @@ const AddRecipeScreen = () => {
     addIngredient,
     removeIngredient,
     addStep,
+    updateStep,
     removeStep,
+    moveStep,
+    insertStepAt,
     validateForm,
     generateId,
   } = useRecipeForm();
@@ -67,6 +71,18 @@ const AddRecipeScreen = () => {
     if (stepInput.trim()) {
       addStep(stepInput);
       setStepInput('');
+    }
+  };
+
+  const handleMoveStepUp = (index: number) => {
+    if (index > 0) {
+      moveStep(index, index - 1);
+    }
+  };
+
+  const handleMoveStepDown = (index: number) => {
+    if (index < formData.steps.length - 1) {
+      moveStep(index, index + 1);
     }
   };
 
@@ -189,14 +205,18 @@ const AddRecipeScreen = () => {
         {errors.steps && <Text style={styles.errorText}>{errors.steps}</Text>}
 
         {formData.steps.map((step, index) => (
-          <View key={index} style={styles.listItem}>
-            <Text style={styles.listItemText}>
-              {index + 1}. {step}
-            </Text>
-            <TouchableOpacity onPress={() => removeStep(index)}>
-              <Text style={styles.removeButton}>✕</Text>
-            </TouchableOpacity>
-          </View>
+          <EditableStep
+            key={index}
+            step={step}
+            index={index}
+            onUpdate={updateStep}
+            onRemove={removeStep}
+            onInsertBefore={insertStepAt}
+            onMoveUp={handleMoveStepUp}
+            onMoveDown={handleMoveStepDown}
+            isFirst={index === 0}
+            isLast={index === formData.steps.length - 1}
+          />
         ))}
       </View>
 

@@ -113,11 +113,47 @@ export const useRecipeForm = (initialData?: Partial<RecipeFormData>) => {
     }
   }, []);
 
+  const updateStep = useCallback((index: number, step: string) => {
+    if (step.trim()) {
+      setFormDataState(prev => ({
+        ...prev,
+        steps: prev.steps.map((existingStep, i) =>
+          i === index ? step.trim() : existingStep,
+        ),
+      }));
+    }
+  }, []);
+
   const removeStep = useCallback((index: number) => {
     setFormDataState(prev => ({
       ...prev,
       steps: prev.steps.filter((_, i) => i !== index),
     }));
+  }, []);
+
+  const moveStep = useCallback((fromIndex: number, toIndex: number) => {
+    setFormDataState(prev => {
+      const newSteps = [...prev.steps];
+      const [movedStep] = newSteps.splice(fromIndex, 1);
+      newSteps.splice(toIndex, 0, movedStep);
+      return {
+        ...prev,
+        steps: newSteps,
+      };
+    });
+  }, []);
+
+  const insertStepAt = useCallback((index: number, step: string) => {
+    if (step.trim()) {
+      setFormDataState(prev => {
+        const newSteps = [...prev.steps];
+        newSteps.splice(index, 0, step.trim());
+        return {
+          ...prev,
+          steps: newSteps,
+        };
+      });
+    }
   }, []);
 
   const validateForm = useCallback((): boolean => {
@@ -170,7 +206,10 @@ export const useRecipeForm = (initialData?: Partial<RecipeFormData>) => {
     addIngredient,
     removeIngredient,
     addStep,
+    updateStep,
     removeStep,
+    moveStep,
+    insertStepAt,
     validateForm,
     resetForm,
     generateId,

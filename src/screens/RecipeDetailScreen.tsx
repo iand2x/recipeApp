@@ -14,6 +14,7 @@ import { RootStackParamList } from '../types/navigation';
 import { Recipe } from '../models/Recipe';
 import { useRecipes, useImagePicker, useRecipeForm } from '../hooks';
 import { UrlInputModal } from '../components/UrlInputModal';
+import { EditableStep } from '../components/EditableStep';
 
 const RecipeDetailScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'RecipeDetail'>>();
@@ -36,7 +37,10 @@ const RecipeDetailScreen = () => {
     addIngredient,
     removeIngredient,
     addStep,
+    updateStep,
     removeStep,
+    moveStep,
+    insertStepAt,
     validateForm,
     setFormData,
   } = useRecipeForm({
@@ -75,6 +79,18 @@ const RecipeDetailScreen = () => {
     if (stepInput.trim()) {
       addStep(stepInput);
       setStepInput('');
+    }
+  };
+
+  const handleMoveStepUp = (index: number) => {
+    if (index > 0) {
+      moveStep(index, index - 1);
+    }
+  };
+
+  const handleMoveStepDown = (index: number) => {
+    if (index < formData.steps.length - 1) {
+      moveStep(index, index + 1);
     }
   };
 
@@ -278,18 +294,28 @@ const RecipeDetailScreen = () => {
           </View>
         )}
 
-        {formData.steps.map((step, index) => (
-          <View key={index} style={styles.listItem}>
-            <Text style={styles.listItemText}>
-              {index + 1}. {step}
-            </Text>
-            {isEditing && (
-              <TouchableOpacity onPress={() => removeStep(index)}>
-                <Text style={styles.removeButton}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+        {formData.steps.map((step, index) =>
+          isEditing ? (
+            <EditableStep
+              key={index}
+              step={step}
+              index={index}
+              onUpdate={updateStep}
+              onRemove={removeStep}
+              onInsertBefore={insertStepAt}
+              onMoveUp={handleMoveStepUp}
+              onMoveDown={handleMoveStepDown}
+              isFirst={index === 0}
+              isLast={index === formData.steps.length - 1}
+            />
+          ) : (
+            <View key={index} style={styles.listItem}>
+              <Text style={styles.listItemText}>
+                {index + 1}. {step}
+              </Text>
+            </View>
+          ),
+        )}
       </View>
 
       <UrlInputModal
