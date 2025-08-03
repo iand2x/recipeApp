@@ -1,0 +1,144 @@
+[
+  {
+    "id": "sample_1",
+    "name": "Classic Chocolate Chip Cookies",
+    "typeId": "5",
+    "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400",
+    "ingredients": [
+      "2 1/4 cups all-purpose flour",
+      "1 tsp baking soda",
+      "1 tsp salt",
+      "1 cup butter, softened",
+      "3/4 cup granulated sugar",
+      "3/4 cup brown sugar",
+      "2 large eggs",
+      "2 tsp vanilla extract",
+      "2 cups chocolate chips"
+    ],
+    "steps": [
+      "Preheat oven to 375°F (190°C)",
+      "Mix flour, baking soda, and salt in a bowl",
+      "Cream butter and sugars until fluffy",
+      "Beat in eggs and vanilla",
+      "Gradually add flour mixture",
+      "Stir in chocolate chips",
+      "Drop rounded tablespoons on ungreased baking sheets",
+      "Bake 9-11 minutes until golden brown",
+      "Cool on baking sheet for 2 minutes, then transfer to wire rack"
+    ]
+  },
+  {
+    "id": "sample_2",
+    "name": "Spaghetti Carbonara",
+    "typeId": "3",
+    "image": "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400",
+    "ingredients": [
+      "1 lb spaghetti pasta",
+      "6 slices bacon, chopped",
+      "4 large eggs",
+      "1 cup grated Parmesan cheese",
+      "3 cloves garlic, minced",
+      "Salt and black pepper to taste",
+      "2 tbsp olive oil",
+      "Fresh parsley for garnish"
+    ],
+    "steps": [
+      "Cook spaghetti according to package directions",
+      "Cook bacon in large skillet until crispy",
+      "Add garlic to bacon, cook 1 minute",
+      "Whisk eggs and Parmesan in a bowl",
+      "Drain pasta, reserve 1 cup pasta water",
+      "Add hot pasta to bacon pan",
+      "Remove from heat, quickly stir in egg mixture",
+      "Add pasta water if needed for creaminess",
+      "Season with salt and pepper",
+      "Garnish with parsley and serve immediately"
+    ]
+  },
+  {
+    "id": "sample_3",
+    "name": "Avocado Toast",
+    "typeId": "1",
+    "image": "https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400",
+    "ingredients": [
+      "2 slices whole grain bread",
+      "1 ripe avocado",
+      "1/4 tsp salt",
+      "1/8 tsp black pepper",
+      "1/4 tsp red pepper flakes",
+      "1 tsp lemon juice",
+      "1 tbsp olive oil",
+      "2 cherry tomatoes, sliced",
+      "1 tbsp feta cheese (optional)"
+    ],
+    "steps": [
+      "Toast bread slices until golden brown",
+      "Mash avocado in a bowl",
+      "Add salt, pepper, and lemon juice to avocado",
+      "Mix well to combine",
+      "Spread avocado mixture on toast",
+      "Drizzle with olive oil",
+      "Top with cherry tomatoes",
+      "Sprinkle with red pepper flakes",
+      "Add feta cheese if desired",
+      "Serve immediately"
+    ]
+  },
+  {
+    "id": "sample_4",
+    "name": "Chicken Caesar Salad",
+    "typeId": "2",
+    "image": "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400",
+    "ingredients": [
+      "2 chicken breasts, grilled and sliced",
+      "1 large head romaine lettuce, chopped",
+      "1/2 cup Caesar dressing",
+      "1/4 cup grated Parmesan cheese",
+      "1 cup croutons",
+      "2 tbsp lemon juice",
+      "Salt and pepper to taste",
+      "2 anchovy fillets (optional)"
+    ],
+    "steps": [
+      "Season and grill chicken breasts until cooked through",
+      "Let chicken rest, then slice into strips",
+      "Wash and chop romaine lettuce",
+      "Place lettuce in large salad bowl",
+      "Add Caesar dressing and toss to coat",
+      "Add grilled chicken on top",
+      "Sprinkle with Parmesan cheese",
+      "Add croutons for crunch",
+      "Drizzle with lemon juice",
+      "Season with salt and pepper to taste"
+    ]
+  },
+  {
+    "id": "sample_5",
+    "name": "Homemade Pizza",
+    "typeId": "3",
+    "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400",
+    "ingredients": [
+      "1 pizza dough (store-bought or homemade)",
+      "1/2 cup pizza sauce",
+      "2 cups mozzarella cheese, shredded",
+      "1/4 cup pepperoni slices",
+      "1/4 cup mushrooms, sliced",
+      "1/4 cup bell peppers, sliced",
+      "2 tbsp olive oil",
+      "1 tsp Italian seasoning",
+      "Salt to taste"
+    ],
+    "steps": [
+      "Preheat oven to 475°F (245°C)",
+      "Roll out pizza dough on floured surface",
+      "Transfer dough to pizza pan or baking sheet",
+      "Brush edges with olive oil",
+      "Spread pizza sauce evenly over dough",
+      "Sprinkle mozzarella cheese on top",
+      "Add pepperoni, mushrooms, and bell peppers",
+      "Season with Italian seasoning and salt",
+      "Bake for 12-15 minutes until crust is golden",
+      "Let cool for 2 minutes before slicing"
+    ]
+  }
+]

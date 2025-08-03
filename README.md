@@ -1,66 +1,133 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Recipe App
 
-# Getting Started
+A modern React Native application for managing and organizing your favorite recipes. Built with TypeScript for enhanced type safety and developer experience.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- 📱 **Cross-platform**: Runs on both Android and iOS
+- 🍳 **Recipe Management**: Add, edit, delete, and view recipes
+- 📸 **Image Support**: Add photos from camera, gallery, or URL
+- 🏷️ **Recipe Categories**: Filter recipes by type (Breakfast, Lunch, Dinner, Snacks, Dessert)
+- 💾 **Local Storage**: Recipes are saved locally using AsyncStorage
+- 🎯 **Sample Data**: Comes preloaded with 5 sample recipes
+- ⚡ **TypeScript**: Full type safety and IntelliSense support
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Sample Recipes Included
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+The app comes with these delicious sample recipes:
 
-```sh
-# Using npm
+- 🍪 Classic Chocolate Chip Cookies (Dessert)
+- 🍝 Spaghetti Carbonara (Dinner)
+- 🥑 Avocado Toast (Breakfast)
+- 🥗 Chicken Caesar Salad (Lunch)
+- 🍕 Homemade Pizza (Dinner)
+
+## Tech Stack
+
+- **React Native** 0.80.2
+- **TypeScript** 5.0.4
+- **React Navigation** v7 (Native Stack)
+- **AsyncStorage** for data persistence
+- **React Native Image Picker** for photo functionality
+- **React Native Picker** for category filtering
+
+## Prerequisites
+
+Before running this project, make sure you have completed the [React Native Environment Setup](https://reactnative.dev/docs/set-up-your-environment).
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. For iOS, install CocoaPods dependencies:
+
+```bash
+cd ios
+bundle install
+bundle exec pod install
+cd ..
+```
+
+## Running the App
+
+### Step 1: Start Metro
+
+First, start the Metro bundler:
+
+```bash
 npm start
-
-# OR using Yarn
+# or
 yarn start
 ```
 
-## Step 2: Build and run your app
+### Step 2: Run on Device/Emulator
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+Open a new terminal and run:
 
-### Android
+#### Android
 
-```sh
-# Using npm
+```bash
 npm run android
-
-# OR using Yarn
+# or
 yarn android
 ```
 
-### iOS
+#### iOS
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+```bash
 npm run ios
-
-# OR using Yarn
+# or
 yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## App Structure
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+src/
+├── components/          # Reusable UI components
+├── data/               # Static data files
+│   ├── sampleRecipes.json
+│   └── recipetypes.json
+├── models/             # TypeScript interfaces
+│   └── Recipe.ts
+├── screens/            # App screens
+│   ├── AddRecipeScreen.tsx
+│   ├── RecipeListScreen.tsx
+│   └── RecipeDetailScreen.tsx
+├── storage/            # Data persistence
+│   └── storage.ts
+└── types/              # TypeScript type definitions
+    └── navigation.ts
+```
+
+## Usage
+
+1. **View Recipes**: Browse all recipes on the main screen
+2. **Filter by Category**: Use the dropdown to filter recipes by type
+3. **Add Recipe**: Tap the "+" button to create a new recipe
+4. **Edit Recipe**: Tap any recipe to view details and edit
+5. **Add Photos**: Take photos, select from gallery, or use image URLs
+6. **Delete Recipes**: Remove recipes you no longer need
+
+## Development
+
+### TypeScript Checking
+
+```bash
+npx tsc --noEmit
+```
+
+### Debugging
+
+- **Android**: Press `R` twice or `Ctrl+M` (Windows) / `Cmd+M` (Mac) for dev menu
+- **iOS**: Press `R` in iOS Simulator or `Cmd+D` for dev menu
 
 ## Step 3: Modify your app
 
@@ -82,16 +149,26 @@ You've successfully run and modified your React Native App. :partying_face:
 - If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
 - If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
 
-# Troubleshooting
+## Troubleshooting
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### Common Issues
 
-# Learn More
+1. **Metro bundler issues**: Clear cache with `npx react-native start --reset-cache`
+2. **iOS build issues**: Clean build folder in Xcode or run `cd ios && xcodebuild clean`
+3. **Android build issues**: Clean with `cd android && ./gradlew clean`
+4. **Image picker not working**: Ensure camera/gallery permissions are granted
 
-To learn more about React Native, take a look at the following resources:
+For more troubleshooting, see the [React Native Troubleshooting Guide](https://reactnative.dev/docs/troubleshooting).
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## Contributing
+
+Feel free to contribute to this project by:
+
+- Adding new features
+- Improving the UI/UX
+- Fixing bugs
+- Adding more sample recipes
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
