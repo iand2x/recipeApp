@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,39 +6,32 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getRecipes } from '../storage/storage';
 import { Recipe } from '../models/Recipe';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 import { Picker } from '@react-native-picker/picker';
-import recipeTypesData from '../data/recipetypes.json';
+import { useRecipes, useRecipeFilter } from '../hooks';
 
 const RecipeListScreen = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [recipeTypes, setRecipeTypes] = useState<
-    { id: string; name: string }[]
-  >([]);
+  const { recipes, loading, error, loadRecipes } = useRecipes();
+  const {
+    selectedType,
+    setSelectedType,
+    recipeTypes,
+    filteredRecipes,
+    recipeCountByType,
+  } = useRecipeFilter(recipes);
 
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
-    const loadRecipes = async () => {
-      const data = await getRecipes();
-      setRecipes(data);
-    };
     const unsubscribe = navigation.addListener('focus', loadRecipes);
     return unsubscribe;
-  }, [navigation]);
-
-  useEffect(() => {
-    // Use the imported recipe types data
-    const typedRecipeTypes = recipeTypesData as { id: string; name: string }[];
-    setRecipeTypes([{ id: 'all', name: 'All Types' }, ...typedRecipeTypes]);
-  }, []);
+  }, [navigation, loadRecipes]);
 
   const renderItem = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
@@ -49,10 +42,25 @@ const RecipeListScreen = () => {
     </TouchableOpacity>
   );
 
-  const filteredRecipes =
-    selectedType === 'all'
-      ? recipes
-      : recipes.filter(r => r.typeId === selectedType);
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#007bff" />
+        <Text style={styles.loadingText}>Loading recipes...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadRecipes}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -60,7 +68,11 @@ const RecipeListScreen = () => {
         selectedValue={selectedType}
         onValueChange={itemValue => setSelectedType(itemValue)}>
         {recipeTypes.map(type => (
-          <Picker.Item key={type.id} label={type.name} value={type.id} />
+          <Picker.Item
+            key={type.id}
+            label={`${type.name} (${recipeCountByType[type.id] || 0})`}
+            value={type.id}
+          />
         ))}
       </Picker>
 
@@ -69,6 +81,16 @@ const RecipeListScreen = () => {
         keyExtractor={item => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No recipes found</Text>
+            <Text style={styles.emptySubText}>
+              {selectedType === 'all'
+                ? 'Add your first recipe!'
+                : 'No recipes in this category'}
+            </Text>
+          </View>
+        }
       />
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -83,6 +105,7 @@ const RecipeListScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
+  centered: { justifyContent: 'center', alignItems: 'center' },
   list: { padding: 16 },
   card: {
     backgroundColor: '#f9f9f9',
@@ -109,6 +132,33 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
+  loadingText: { marginTop: 10, fontSize: 16, color: '#666' },
+  errorText: {
+    fontSize: 16,
+    color: '#d32f2f',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: { color: '#fff', fontWeight: 'bold' },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  emptySubText: { fontSize: 14, color: '#999', textAlign: 'center' },
 });
 
 export default RecipeListScreen;

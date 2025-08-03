@@ -1,260 +1,410 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { launchImageLibrary, launchCamera, ImagePickerResponse } from 'react-native-image-picker';
 import { RootStackParamList } from '../types/navigation';
-import { getRecipes, saveRecipes } from '../storage/storage';
 import { Recipe } from '../models/Recipe';
+import { useRecipes, useImagePicker, useRecipeForm } from '../hooks';
+import { UrlInputModal } from '../components/UrlInputModal';
 
 const RecipeDetailScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'RecipeDetail'>>();
   const navigation = useNavigation();
   const { recipe } = route.params;
 
-  const [name, setName] = useState(recipe.name);
-  const [image, setImage] = useState(recipe.image);
-  const [selectedImageUri, setSelectedImageUri] = useState<string>('');
-  const [ingredients, setIngredients] = useState([...recipe.ingredients]);
-  const [steps, setSteps] = useState([...recipe.steps]);
+  const { updateExistingRecipe, removeRecipe } = useRecipes();
+  const {
+    selectedImage,
+    showImagePicker,
+    showUrlModal,
+    handleUrlModalSubmit,
+    handleUrlModalCancel,
+  } = useImagePicker();
+  const {
+    formData,
+    errors,
+    updateName,
+    updateImage,
+    addIngredient,
+    removeIngredient,
+    addStep,
+    removeStep,
+    validateForm,
+    setFormData,
+  } = useRecipeForm({
+    name: recipe.name,
+    typeId: recipe.typeId,
+    image: recipe.image,
+    ingredients: [...recipe.ingredients],
+    steps: [...recipe.steps],
+  });
 
-  const selectImage = () => {
+  const [ingredientInput, setIngredientInput] = useState('');
+  const [stepInput, setStepInput] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Update form image when selectedImage changes
+  useEffect(() => {
+    if (selectedImage) {
+      updateImage(selectedImage);
+    }
+  }, [selectedImage, updateImage]);
+
+  const handleImageSelect = async () => {
+    await showImagePicker();
+  };
+
+  const handleAddIngredient = () => {
+    if (ingredientInput.trim()) {
+      addIngredient(ingredientInput);
+      setIngredientInput('');
+    }
+  };
+
+  const handleAddStep = () => {
+    if (stepInput.trim()) {
+      addStep(stepInput);
+      setStepInput('');
+    }
+  };
+
+  const handleSave = async () => {
+    if (isSaving) return; // Prevent double submission
+
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const updatedRecipe: Recipe = {
+        id: recipe.id,
+        name: formData.name,
+        typeId: formData.typeId,
+        image: formData.image,
+        ingredients: formData.ingredients,
+        steps: formData.steps,
+      };
+
+      await updateExistingRecipe(updatedRecipe);
+      setIsEditing(false);
+      Alert.alert('Success', 'Recipe updated successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update recipe. Please try again.');
+      console.error('Update error:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (isDeleting) return; // Prevent double submission
+
     Alert.alert(
-      'Select Image',
-      'Choose how you want to update the image',
+      'Delete Recipe',
+      'Are you sure you want to delete this recipe? This action cannot be undone.',
       [
-        { text: 'Camera', onPress: openCamera },
-        { text: 'Gallery', onPress: openGallery },
-        { text: 'URL', onPress: () => {} }, // Keep existing URL input
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
-  };
-
-  const openCamera = () => {
-    launchCamera(
-      {
-        mediaType: 'photo',
-        quality: 0.7,
-        maxWidth: 800,
-        maxHeight: 800,
-      },
-      (response: ImagePickerResponse) => {
-        if (response.assets && response.assets[0]) {
-          const imageUri = response.assets[0].uri || '';
-          setSelectedImageUri(imageUri);
-          setImage(imageUri);
-        }
-      }
-    );
-  };
-
-  const openGallery = () => {
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        quality: 0.7,
-        maxWidth: 800,
-        maxHeight: 800,
-      },
-      (response: ImagePickerResponse) => {
-        if (response.assets && response.assets[0]) {
-          const imageUri = response.assets[0].uri || '';
-          setSelectedImageUri(imageUri);
-          setImage(imageUri);
-        }
-      }
-    );
-  };
-
-  const updateRecipe = async () => {
-    const updated: Recipe = { ...recipe, name, image, ingredients, steps };
-    const existing = await getRecipes();
-    const updatedList = existing.map((r: Recipe) => (r.id === recipe.id ? updated : r));
-    await saveRecipes(updatedList);
-    Alert.alert('Success', 'Recipe updated successfully.');
-    navigation.goBack();
-  };
-
-  const deleteRecipe = async () => {
-    Alert.alert('Confirm', 'Are you sure you want to delete this recipe?', [
-      { text: 'Cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          const existing = await getRecipes();
-          const filtered = existing.filter((r: Recipe) => r.id !== recipe.id);
-          await saveRecipes(filtered);
-          navigation.goBack();
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsDeleting(true);
+              await removeRecipe(recipe.id);
+              Alert.alert('Success', 'Recipe deleted successfully!', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                'Failed to delete recipe. Please try again.',
+              );
+              console.error('Delete error:', error);
+            } finally {
+              setIsDeleting(false);
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
+  };
+
+  const handleCancel = () => {
+    // Reset form to original recipe data
+    setFormData({
+      name: recipe.name,
+      typeId: recipe.typeId,
+      image: recipe.image,
+      ingredients: [...recipe.ingredients],
+      steps: [...recipe.steps],
+    });
+    setIsEditing(false);
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Name</Text>
-      <TextInput value={name} onChangeText={setName} style={styles.input} />
+    <ScrollView style={styles.container}>
+      {/* Header with action buttons */}
+      <View style={styles.header}>
+        {!isEditing ? (
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => setIsEditing(true)}>
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.deleteButton,
+                isDeleting && styles.deleteButtonDisabled,
+              ]}
+              onPress={handleDelete}
+              disabled={isDeleting}>
+              <Text style={styles.deleteButtonText}>
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                (isSaving || isDeleting) && styles.saveButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={isSaving || isDeleting}>
+              <Text style={styles.saveButtonText}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
 
-      <Text style={styles.label}>Image</Text>
-      <View style={styles.imageSection}>
-        <TextInput 
-          value={image} 
-          onChangeText={setImage} 
-          style={styles.input}
-          placeholder="Enter image URL or use upload button"
-        />
-        <TouchableOpacity style={styles.uploadButton} onPress={selectImage}>
-          <Text style={styles.uploadButtonText}>📷 Update Image</Text>
+      {/* Recipe Image */}
+      <View style={styles.imageContainer}>
+        <TouchableOpacity
+          style={styles.imageButton}
+          onPress={isEditing ? handleImageSelect : undefined}
+          disabled={!isEditing}>
+          <Image source={{ uri: formData.image }} style={styles.recipeImage} />
+          {isEditing && (
+            <View style={styles.imageOverlay}>
+              <Text style={styles.imageOverlayText}>Tap to change image</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
-      
-      {(selectedImageUri || image) && (
-        <View style={styles.imagePreview}>
-          <Text style={styles.previewLabel}>Current Image:</Text>
-          <Image 
-            source={{ uri: selectedImageUri || image }} 
-            style={styles.previewImage}
-            onError={() => console.log('Failed to load image')}
-          />
-        </View>
-      )}
 
-      <Text style={styles.label}>Ingredients</Text>
-      {ingredients.map((item, index) => (
-        <View key={index} style={styles.itemRow}>
+      {/* Recipe Name */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Recipe Name</Text>
+        {isEditing ? (
           <TextInput
-            value={item}
-            onChangeText={(text) => {
-              const copy = [...ingredients];
-              copy[index] = text;
-              setIngredients(copy);
-            }}
-            style={styles.itemInput}
+            style={[styles.input, errors.name && styles.inputError]}
+            value={formData.name}
+            onChangeText={updateName}
+            placeholder="Enter recipe name"
           />
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => {
-              const copy = [...ingredients];
-              copy.splice(index, 1);
-              setIngredients(copy);
-            }}
-          >
-            <Text style={styles.removeButtonText}>✕</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
-      <Button title="Add Ingredient" onPress={() => setIngredients([...ingredients, ''])} />
-
-      <Text style={styles.label}>Steps</Text>
-      {steps.map((item, index) => (
-        <View key={index} style={styles.itemRow}>
-          <TextInput
-            value={item}
-            onChangeText={(text) => {
-              const copy = [...steps];
-              copy[index] = text;
-              setSteps(copy);
-            }}
-            style={styles.itemInput}
-          />
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => {
-              const copy = [...steps];
-              copy.splice(index, 1);
-              setSteps(copy);
-            }}
-          >
-            <Text style={styles.removeButtonText}>✕</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
-      <Button title="Add Step" onPress={() => setSteps([...steps, ''])} />
-
-      <View style={styles.buttonRow}>
-        <Button title="Update" onPress={updateRecipe} />
-        <Button title="Delete" onPress={deleteRecipe} color="red" />
+        ) : (
+          <Text style={styles.displayText}>{formData.name}</Text>
+        )}
+        {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
       </View>
+
+      {/* Ingredients */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Ingredients</Text>
+        {isEditing && (
+          <View style={styles.inputRow}>
+            <TextInput
+              style={[styles.input, styles.flexInput]}
+              value={ingredientInput}
+              onChangeText={setIngredientInput}
+              placeholder="Add ingredient"
+            />
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleAddIngredient}>
+              <Text style={styles.addButtonText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {formData.ingredients.map((ingredient, index) => (
+          <View key={index} style={styles.listItem}>
+            <Text style={styles.listItemText}>• {ingredient}</Text>
+            {isEditing && (
+              <TouchableOpacity onPress={() => removeIngredient(index)}>
+                <Text style={styles.removeButton}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ))}
+      </View>
+
+      {/* Steps */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Instructions</Text>
+        {isEditing && (
+          <View style={styles.inputRow}>
+            <TextInput
+              style={[styles.input, styles.flexInput]}
+              value={stepInput}
+              onChangeText={setStepInput}
+              placeholder="Add cooking step"
+              multiline
+            />
+            <TouchableOpacity style={styles.addButton} onPress={handleAddStep}>
+              <Text style={styles.addButtonText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {formData.steps.map((step, index) => (
+          <View key={index} style={styles.listItem}>
+            <Text style={styles.listItemText}>
+              {index + 1}. {step}
+            </Text>
+            {isEditing && (
+              <TouchableOpacity onPress={() => removeStep(index)}>
+                <Text style={styles.removeButton}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ))}
+      </View>
+
+      <UrlInputModal
+        visible={showUrlModal}
+        onSubmit={handleUrlModalSubmit}
+        onCancel={handleUrlModalCancel}
+      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  label: {
-    fontWeight: 'bold',
-    marginTop: 15,
+  headerButtons: { flexDirection: 'row', gap: 10 },
+  editButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
   },
+  editButtonText: { color: '#fff', fontWeight: 'bold' },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  deleteButtonText: { color: '#fff', fontWeight: 'bold' },
+  deleteButtonDisabled: {
+    backgroundColor: '#6c757d',
+    opacity: 0.6,
+  },
+  saveButton: {
+    backgroundColor: '#28a745',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  saveButtonText: { color: '#fff', fontWeight: 'bold' },
+  saveButtonDisabled: {
+    backgroundColor: '#6c757d',
+    opacity: 0.6,
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  cancelButtonText: { color: '#fff', fontWeight: 'bold' },
+  imageContainer: { padding: 16 },
+  imageButton: { position: 'relative' },
+  recipeImage: { width: '100%', height: 200, borderRadius: 12 },
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  imageOverlayText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  section: { padding: 16, borderTopWidth: 1, borderTopColor: '#eee' },
+  label: { fontSize: 18, fontWeight: '600', marginBottom: 12, color: '#333' },
   input: {
-    borderColor: '#ccc',
     borderWidth: 1,
-    padding: 10,
-    marginTop: 5,
-    borderRadius: 5,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
   },
-  buttonRow: {
+  inputError: { borderColor: '#d32f2f' },
+  errorText: { color: '#d32f2f', fontSize: 12, marginTop: 4 },
+  displayText: { fontSize: 16, color: '#333', lineHeight: 24 },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  flexInput: { flex: 1 },
+  addButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addButtonText: { color: '#fff', fontWeight: 'bold' },
+  listItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  imageSection: {
-    marginTop: 5,
-  },
-  uploadButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 5,
     alignItems: 'center',
-    marginTop: 8,
-  },
-  uploadButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  imagePreview: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  previewLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
     marginBottom: 8,
   },
-  previewImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  itemInput: {
-    flex: 1,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 8,
-  },
+  listItemText: { flex: 1, fontSize: 15, color: '#333', lineHeight: 22 },
   removeButton: {
-    backgroundColor: '#dc3545',
-    padding: 8,
-    borderRadius: 5,
-    minWidth: 30,
-    alignItems: 'center',
-  },
-  removeButtonText: {
-    color: '#fff',
+    color: '#d32f2f',
+    fontSize: 18,
     fontWeight: 'bold',
-    fontSize: 16,
+    padding: 4,
   },
 });
 
