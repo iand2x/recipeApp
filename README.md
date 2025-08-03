@@ -1,15 +1,18 @@
 # Recipe App
 
-A modern React Native application for managing and organizing your favorite recipes. Built with TypeScript for enhanced type safety and developer experience.
+A modern React Native application for managing and organizing your favorite recipes. Built with TypeScript and Redux for enhanced type safety, state management, and developer experience.
 
 ## Features
 
 - 📱 **Cross-platform**: Runs on both Android and iOS
-- 🍳 **Recipe Management**: Add, edit, delete, and view recipes
-- 📸 **Image Support**: Add photos from camera, gallery, or URL
+- 🍳 **Recipe Management**: Add, edit, delete, and view recipes with advanced editing capabilities
+- 📸 **Image Support**: Add photos from camera, gallery, or URL with modal input
 - 🏷️ **Recipe Categories**: Filter recipes by type (Breakfast, Lunch, Dinner, Snacks, Dessert)
-- 💾 **Local Storage**: Recipes are saved locally using AsyncStorage
+- � **Redux State Management**: Centralized state management with Redux Toolkit
+- ✏️ **Advanced Step Editing**: Inline editing, reordering, and insertion of recipe steps
+- 💾 **Persistent Storage**: Recipes saved locally with AsyncStorage, merged with sample data
 - 🎯 **Sample Data**: Comes preloaded with 5 sample recipes
+- 🎨 **Custom Hooks**: Modular business logic with custom React hooks
 - ⚡ **TypeScript**: Full type safety and IntelliSense support
 
 ## Sample Recipes Included
@@ -26,10 +29,12 @@ The app comes with these delicious sample recipes:
 
 - **React Native** 0.80.2
 - **TypeScript** 5.0.4
+- **Redux Toolkit** 2.8.2 with React-Redux 9.2.0
 - **React Navigation** v7 (Native Stack)
 - **AsyncStorage** for data persistence
 - **React Native Image Picker** for photo functionality
 - **React Native Picker** for category filtering
+- **Custom Hooks Architecture** for business logic separation
 
 ## Prerequisites
 
@@ -92,9 +97,18 @@ yarn ios
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── EditableStep.tsx    # Advanced step editing component
+│   └── UrlInputModal.tsx   # URL input modal for images
 ├── data/               # Static data files
 │   ├── sampleRecipes.json
 │   └── recipetypes.json
+├── hooks/              # Custom React hooks
+│   ├── index.ts           # Hook exports
+│   ├── useImagePicker.ts  # Image selection logic
+│   ├── useRecipeFilter.ts # Recipe filtering logic
+│   ├── useRecipeForm.ts   # Form state management
+│   ├── useRecipes.ts      # Legacy AsyncStorage hooks
+│   └── useRecipesRedux.ts # Redux-based recipe management
 ├── models/             # TypeScript interfaces
 │   └── Recipe.ts
 ├── screens/            # App screens
@@ -103,18 +117,49 @@ src/
 │   └── RecipeDetailScreen.tsx
 ├── storage/            # Data persistence
 │   └── storage.ts
+├── store/              # Redux store configuration
+│   ├── hooks.ts           # Typed Redux hooks
+│   ├── index.ts          # Store setup
+│   ├── selectors/        # Redux selectors
+│   └── slices/           # Redux slices
 └── types/              # TypeScript type definitions
     └── navigation.ts
 ```
 
 ## Usage
 
-1. **View Recipes**: Browse all recipes on the main screen
+1. **View Recipes**: Browse all recipes on the main screen with Redux-powered state management
 2. **Filter by Category**: Use the dropdown to filter recipes by type
-3. **Add Recipe**: Tap the "+" button to create a new recipe
-4. **Edit Recipe**: Tap any recipe to view details and edit
-5. **Add Photos**: Take photos, select from gallery, or use image URLs
-6. **Delete Recipes**: Remove recipes you no longer need
+3. **Add Recipe**: Tap the "+" button to create a new recipe with advanced form validation
+4. **Edit Recipe**: Tap any recipe to view details and edit with inline step editing
+5. **Advanced Step Editing**:
+   - Edit steps inline by tapping the edit button
+   - Reorder steps using up/down arrows
+   - Insert new steps between existing ones
+   - Delete individual steps
+6. **Add Photos**: Take photos, select from gallery, or use image URLs with modal input
+7. **Delete Recipes**: Remove recipes with confirmation dialogs
+
+## Architecture Highlights
+
+### Redux Integration
+
+- **Centralized State**: All recipe data managed through Redux store
+- **Typed Hooks**: Custom typed `useAppDispatch` and `useAppSelector` hooks
+- **Async Actions**: Redux Toolkit async thunks for data persistence
+- **Memoized Selectors**: Optimized selectors for filtering and data access
+
+### Custom Hooks
+
+- **useRecipesRedux**: Main hook for recipe CRUD operations with Redux
+- **useImagePicker**: Handles camera, gallery, and URL image selection
+- **useRecipeForm**: Form state management with validation
+- **useRecipeFilter**: Recipe filtering logic
+
+### Advanced Components
+
+- **EditableStep**: Sophisticated inline editing with move/insert capabilities
+- **UrlInputModal**: Modal for entering image URLs with validation
 
 ## Development
 
@@ -122,6 +167,25 @@ src/
 
 ```bash
 npx tsc --noEmit
+```
+
+### Redux DevTools
+
+The app includes Redux DevTools integration for state debugging and time-travel debugging.
+
+### Code Architecture
+
+- **Separation of Concerns**: Business logic separated into custom hooks
+- **Type Safety**: Full TypeScript coverage with strict mode
+- **Modern Patterns**: Uses Redux Toolkit for simplified Redux logic
+- **Component Composition**: Reusable components with clear prop interfaces
+
+### Testing
+
+```bash
+npm test
+# or
+yarn test
 ```
 
 ### Debugging
@@ -157,6 +221,8 @@ You've successfully run and modified your React Native App. :partying_face:
 2. **iOS build issues**: Clean build folder in Xcode or run `cd ios && xcodebuild clean`
 3. **Android build issues**: Clean with `cd android && ./gradlew clean`
 4. **Image picker not working**: Ensure camera/gallery permissions are granted
+5. **Redux state issues**: Use Redux DevTools to inspect state changes
+6. **TypeScript errors**: Run `npx tsc --noEmit` to check for type issues
 
 For more troubleshooting, see the [React Native Troubleshooting Guide](https://reactnative.dev/docs/troubleshooting).
 
@@ -168,6 +234,21 @@ Feel free to contribute to this project by:
 - Improving the UI/UX
 - Fixing bugs
 - Adding more sample recipes
+- Enhancing Redux architecture
+- Writing unit tests
+- Improving TypeScript definitions
+
+## Key Features Implemented
+
+- ✅ Full TypeScript conversion
+- ✅ Redux Toolkit integration
+- ✅ Custom hooks architecture
+- ✅ Advanced step editing with inline capabilities
+- ✅ Image picker with URL support
+- ✅ Recipe filtering and categorization
+- ✅ Persistent storage with sample data merging
+- ✅ Form validation and error handling
+- ✅ Navigation with typed route parameters
 
 ## License
 
