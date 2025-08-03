@@ -12,7 +12,7 @@ import {
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { Recipe } from '../models/Recipe';
-import { useRecipes, useImagePicker, useRecipeForm } from '../hooks';
+import { useRecipesRedux, useImagePicker, useRecipeForm } from '../hooks';
 import { UrlInputModal } from '../components/UrlInputModal';
 import { EditableStep } from '../components/EditableStep';
 
@@ -21,7 +21,7 @@ const RecipeDetailScreen = () => {
   const navigation = useNavigation();
   const { recipe } = route.params;
 
-  const { updateExistingRecipe, removeRecipe } = useRecipes();
+  const { updateRecipe, removeRecipe } = useRecipesRedux();
   const {
     selectedImage,
     showImagePicker,
@@ -113,7 +113,7 @@ const RecipeDetailScreen = () => {
         steps: formData.steps,
       };
 
-      await updateExistingRecipe(updatedRecipe);
+      await updateRecipe(updatedRecipe);
       setIsEditing(false);
       Alert.alert('Success', 'Recipe updated successfully!');
     } catch (error) {

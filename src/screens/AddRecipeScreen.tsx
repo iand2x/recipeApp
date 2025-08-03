@@ -14,13 +14,13 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { Recipe } from '../models/Recipe';
 import recipeTypes from '../data/recipetypes.json';
-import { useRecipes, useImagePicker, useRecipeForm } from '../hooks';
+import { useRecipesRedux, useImagePicker, useRecipeForm } from '../hooks';
 import { UrlInputModal } from '../components/UrlInputModal';
 import { EditableStep } from '../components/EditableStep';
 
 const AddRecipeScreen = () => {
   const navigation = useNavigation();
-  const { addNewRecipe } = useRecipes();
+  const { addNewRecipe } = useRecipesRedux();
   const {
     selectedImage,
     showImagePicker,

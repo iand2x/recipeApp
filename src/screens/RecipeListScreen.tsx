@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,38 +7,81 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Recipe } from '../models/Recipe';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 import { Picker } from '@react-native-picker/picker';
-import { useRecipes, useRecipeFilter } from '../hooks';
+import { useRecipesRedux } from '../hooks';
+import { useAppSelector } from '../store/hooks';
+import { selectRecipeTypeCounts } from '../store/selectors/recipesSelectors';
+import recipeTypes from '../data/recipetypes.json';
 
 const RecipeListScreen = () => {
-  const { recipes, loading, error, loadRecipes } = useRecipes();
+  // Redux hooks
   const {
-    selectedType,
-    setSelectedType,
-    recipeTypes,
-    filteredRecipes,
-    recipeCountByType,
-  } = useRecipeFilter(recipes);
+    recipes,
+    loading,
+    error,
+    filter,
+    setTypeFilter,
+    clearErrorState,
+    removeRecipe,
+  } = useRecipesRedux();
+
+  const typeCounts = useAppSelector(selectRecipeTypeCounts);
+  const allRecipes = useAppSelector(state => state.recipes.recipes);
+
+  const handleDeleteRecipe = async (recipe: Recipe) => {
+    // Always show delete confirmation for safety
+    Alert.alert(
+      'Delete Recipe',
+      `Are you sure you want to delete "${recipe.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeRecipe(recipe.id);
+            } catch (deleteError) {
+              console.error('Error deleting recipe:', deleteError);
+              Alert.alert(
+                'Error',
+                'Failed to delete recipe. Please try again.',
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', loadRecipes);
-    return unsubscribe;
-  }, [navigation, loadRecipes]);
 
   const renderItem = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate('RecipeDetail', { recipe: item })}>
       <Image source={{ uri: item.image }} style={styles.image} />
-      <Text style={styles.title}>{item.name}</Text>
+      <View style={styles.cardContent}>
+        <Text style={styles.title}>{item.name}</Text>
+        <Text style={styles.subtitle}>
+          {recipeTypes.find(t => t.id === item.typeId)?.name || 'Unknown'}
+        </Text>
+        <Text style={styles.meta}>
+          {item.ingredients.length} ingredients • {item.steps.length} steps
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDeleteRecipe(item)}>
+        <Text style={styles.deleteButtonText}>×</Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -55,7 +98,7 @@ const RecipeListScreen = () => {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.errorText}>Error: {error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadRecipes}>
+        <TouchableOpacity style={styles.retryButton} onPress={clearErrorState}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -64,20 +107,27 @@ const RecipeListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Picker
-        selectedValue={selectedType}
-        onValueChange={itemValue => setSelectedType(itemValue)}>
-        {recipeTypes.map(type => (
-          <Picker.Item
-            key={type.id}
-            label={`${type.name} (${recipeCountByType[type.id] || 0})`}
-            value={type.id}
-          />
-        ))}
-      </Picker>
+      <View style={styles.headerContainer}>
+        <View style={styles.filterContainer}>
+          <Picker selectedValue={filter.typeId} onValueChange={setTypeFilter}>
+            <Picker.Item
+              key="all"
+              label={`All Recipes (${allRecipes.length})`}
+              value="all"
+            />
+            {recipeTypes.map(type => (
+              <Picker.Item
+                key={type.id}
+                label={`${type.name} (${typeCounts[type.id] || 0})`}
+                value={type.id}
+              />
+            ))}
+          </Picker>
+        </View>
+      </View>
 
       <FlatList
-        data={filteredRecipes}
+        data={recipes}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
@@ -85,7 +135,7 @@ const RecipeListScreen = () => {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No recipes found</Text>
             <Text style={styles.emptySubText}>
-              {selectedType === 'all'
+              {filter.typeId === 'all'
                 ? 'Add your first recipe!'
                 : 'No recipes in this category'}
             </Text>
@@ -106,6 +156,15 @@ const RecipeListScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   centered: { justifyContent: 'center', alignItems: 'center' },
+  headerContainer: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterContainer: {
+    marginBottom: 8,
+  },
   list: { padding: 16 },
   card: {
     backgroundColor: '#f9f9f9',
@@ -116,7 +175,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: { width: 60, height: 60, borderRadius: 8, marginRight: 16 },
+  cardContent: {
+    flex: 1,
+  },
   title: { fontSize: 16, fontWeight: '600' },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  meta: {
+    fontSize: 12,
+    color: '#999',
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#ff4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   addButton: {
     backgroundColor: '#007bff',
     paddingHorizontal: 20,
